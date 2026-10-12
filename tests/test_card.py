@@ -35,7 +35,8 @@ class TestFrame(unittest.TestCase):
             a.RULE,
             "Written by: the assistant",
             "Expires in 60 minutes (14:05 UTC).",
-            'Reply "yes 3f9a1c" to approve, "no 3f9a1c" to drop.',
+            'Reply "yes 3f9a1c" to approve,',
+            '"no 3f9a1c" to drop.',
         ])
 
     def test_every_body_line_has_the_gutter_blank_ones_too(self) -> None:
@@ -43,9 +44,9 @@ class TestFrame(unittest.TestCase):
         self.assertEqual(len(lines), 5)
         self.assertTrue(all(line.startswith(a.GUTTER) for line in lines))
 
-    def test_the_release_line_is_last(self) -> None:
-        last = card().render()[-1].split("\n")[-1]
-        self.assertTrue(last.startswith('Reply "yes 3f9a1c"'))
+    def test_the_release_lines_are_last(self) -> None:
+        last = card().render()[-1].split("\n")[-2:]
+        self.assertEqual(last, ['Reply "yes 3f9a1c" to approve,', '"no 3f9a1c" to drop.'])
 
     def test_an_empty_body_still_renders_the_whole_frame(self) -> None:
         pieces = card(body="").render()

@@ -148,8 +148,11 @@ class Card:
         lines = [RULE]
         if self.author:
             lines.append("Written by: " + self.author)
-        # Two short lines rather than one long one, so a phone wraps neither.
-        return lines + ["Expires %s." % self.expires, 'Reply "yes %s" to approve, "no %s" to drop.' % (self.id, self.id)]
+        # The expiry and the release on lines of their own, the release split
+        # at its comma: with an id of up to 12 characters and an expiry of up to
+        # 26, no line the card writes itself is wider than 36 characters.
+        return lines + ["Expires %s." % self.expires,
+                        'Reply "yes %s" to approve,' % self.id, '"no %s" to drop.' % self.id]
 
     def _fits(self, limit: int) -> bool:
         return (units("\n".join(self.head())) <= limit and units("\n".join(self.foot())) <= limit

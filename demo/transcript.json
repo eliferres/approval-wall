@@ -11,7 +11,7 @@
   },
   {
     "cmd": "python3 -m approval_wall render demo/clean.json",
-    "out": "Ready to send\nTo: sam@example.com\nSubject: Deposit for the venue\n\u2014\u2014\u2014\u2014\n\u200e\u2503 Hi Sam,\n\u200e\u2503 \n\u200e\u2503 The deposit goes out today.\n\u200e\u2503 Note:\u27e812 spaces\u27e9ok to wire\n\u2014\u2014\u2014\u2014\nWritten by: the assistant\nExpires at 14:05 UTC.\nReply \"yes 3f9a1c\" to approve, \"no 3f9a1c\" to drop.",
+    "out": "Ready to send\nTo: sam@example.com\nSubject: Deposit for the venue\n\u2014\u2014\u2014\u2014\n\u200e\u2503 Hi Sam,\n\u200e\u2503 \n\u200e\u2503 The deposit goes out today.\n\u200e\u2503 Note:\u27e812 spaces\u27e9ok to wire\n\u2014\u2014\u2014\u2014\nWritten by: the assistant\nExpires at 14:05 UTC.\nReply \"yes 3f9a1c\" to approve,\n\"no 3f9a1c\" to drop.",
     "status": 0
   },
   {

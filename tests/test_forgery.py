@@ -135,6 +135,14 @@ class TestForgery(unittest.TestCase):
                                  "sender_name reads as a number or an address, not a name")
         self.assertIsNone(card(sender="+18455550100", sender_name="Dana Reyes").refusal())
 
+    def test_frame_lines_fit_the_width(self) -> None:
+        """The lines the card writes itself never wrap at 36 or 40 columns,
+        so the phone can never show a frame line broken in two."""
+        c = card(sender="dana@example.com", recipient="sam@example.com", subject="Deposit for the venue",
+                 author="the assistant", expires="in 60 minutes (14:05 UTC)", id="3f9a1c0b2d4e")
+        for line in c.head() + c.foot():
+            self.assertLessEqual(len(line), 36, line)
+
     def test_utf16_cut_never_splits_a_surrogate_pair(self) -> None:
         limit = 120
         room = limit - a.units(a.GUTTER)

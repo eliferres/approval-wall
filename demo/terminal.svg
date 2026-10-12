@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 828" role="img" aria-labelledby="t d" font-family="SF Mono, Menlo, Consolas, monospace" font-size="16" xml:space="preserve">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 856" role="img" aria-labelledby="t d" font-family="SF Mono, Menlo, Consolas, monospace" font-size="16" xml:space="preserve">
   <title id="t">approval-wall</title>
   <desc id="d">A forged note and a forged card refused, then a clean card rendered with its gutter</desc>
   <style>
@@ -9,7 +9,7 @@
     .bad { fill: #ff9494; }
     .good { fill: #7ee2a8; }
   </style>
-  <rect width="660" height="828" rx="14" fill="#0b0f14"/>
+  <rect width="660" height="856" rx="14" fill="#0b0f14"/>
   <rect width="660" height="40" rx="14" fill="#11161d"/>
   <rect y="26" width="660" height="14" fill="#11161d"/>
   <circle cx="26" cy="20" r="6" fill="#ff5f57"/>
@@ -39,8 +39,9 @@
   <text x="24" y="632" class="dim">————</text>
   <text x="24" y="660" class="dim">Written by: the assistant</text>
   <text x="24" y="688" class="dim">Expires at 14:05 UTC.</text>
-  <text x="24" y="716" class="dim">Reply &quot;yes 3f9a1c&quot; to approve, &quot;no 3f9a1c&quot; to drop.</text>
-  <text x="24" y="744"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall check demo/clean.txt; echo &quot;exit \</tspan></text>
-  <text x="24" y="772" class="cmd">    $?&quot;</text>
-  <text x="24" y="800" class="dim">exit 0</text>
+  <text x="24" y="716" class="dim">Reply &quot;yes 3f9a1c&quot; to approve,</text>
+  <text x="24" y="744" class="dim">&quot;no 3f9a1c&quot; to drop.</text>
+  <text x="24" y="772"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall check demo/clean.txt; echo &quot;exit \</tspan></text>
+  <text x="24" y="800" class="cmd">    $?&quot;</text>
+  <text x="24" y="828" class="dim">exit 0</text>
 </svg>
