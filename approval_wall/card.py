@@ -6,7 +6,8 @@ form, an inbound message), so none of it may pass as the card's own lines:
 
 - every body line, blank ones included, starts with a gutter mark, so no body
   line can sit flush with the frame or push a fake footer out of view;
-- the rule line's glyphs are refused inside the body and every field;
+- the rule line's glyphs, and runs of box-drawing and block characters, are
+  refused inside the body and every field;
 - every body line is wrapped to the card's width before the gutter goes on,
   so a long line never wraps on the phone into a continuation with no
   gutter, where it could draw a rule or a footer flush with the frame;
@@ -51,6 +52,9 @@ ENTITY = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[A-Za-z][A-Za-z0-9]*);?")
 # Two or more dash glyphs in a row, after NFKC: the em dash, the horizontal
 # bar, and the two- and three-em dashes, so a body cannot draw the rule.
 RULE_GLYPHS = re.compile("[%s]{2,}" % "".join(map(chr, (0x2014, 0x2015, 0x2E3A, 0x2E3B))))
+# Three or more box-drawing or block-element glyphs in a row (U+2500 to
+# U+259F), after NFKC: a run of them draws a line as well as the dashes do.
+LINE_DRAWING = re.compile("[%s-%s]{3,}" % (chr(0x2500), chr(0x259F)))
 ONE_LINE = ("title", "sender", "sender_name", "recipient", "subject", "author", "expires")
 NAMES = ("sender_name", "author")
 
@@ -66,6 +70,10 @@ def units(text: str) -> int:
 
 def _draws_rule(text: str) -> bool:
     return bool(RULE_GLYPHS.search(unicodedata.normalize("NFKC", text)))
+
+
+def _draws_line(text: str) -> bool:
+    return bool(LINE_DRAWING.search(unicodedata.normalize("NFKC", text)))
 
 
 def spaces_shown(line: str, indent: int = INDENT_KEPT) -> str:
@@ -94,6 +102,8 @@ def one_line_refusal(key: str, value: str) -> Optional[str]:
         return "%s holds an HTML character reference, which an HTML transport shows decoded" % key
     if _draws_rule(value):
         return "%s holds the card's rule glyphs" % key
+    if _draws_line(value):
+        return "%s holds a run of 3 or more line-drawing characters (U+2500 to U+259F)" % key
     shape = skeleton(value)
     if REPLY_WORDS.search(shape):
         return "%s holds the card's own reply words (yes, no or send and an id)" % key
@@ -139,6 +149,8 @@ class Card:
             return "body holds " + why
         if _draws_rule(self.body):
             return "body holds the card's rule glyphs"
+        if _draws_line(self.body):
+            return "body holds a run of 3 or more line-drawing characters (U+2500 to U+259F)"
         return None
 
     def head(self) -> List[str]:

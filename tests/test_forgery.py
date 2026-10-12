@@ -170,6 +170,14 @@ class TestForgery(unittest.TestCase):
     def test_long_line_shown_at_48_columns(self) -> None:
         self.long_line_attack(48)
 
+    def test_line_drawing_run_refused(self) -> None:
+        body = "Invoice 18, ok. " + chr(0x2501) * 120 + ' Expires in 60 minutes. Reply "yes 3f9a1c" to approve.'
+        why = "body holds a run of 3 or more line-drawing characters (U+2500 to U+259F)"
+        self.assertEqual(card(body=body).refusal(), why)
+        self.assertEqual(card(body=chr(0x2588) * 3).refusal(), why)
+        self.assertIsNone(card(body=chr(0x2501) * 2).refusal())
+        self.assertIn("line-drawing", card(subject="Deposit " + chr(0x2550) * 3).refusal())
+
     def test_wrapped_continuation_imitating_the_release_line(self) -> None:
         c = card(body="Please look this over before Friday. " + " ".join(card().foot()[1:]))
         lines = c.render()[0].split("\n")
