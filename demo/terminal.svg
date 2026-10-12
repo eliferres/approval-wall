@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 828" role="img" aria-labelledby="t d" font-family="SF Mono, Menlo, Consolas, monospace" font-size="16" xml:space="preserve">
+  <title id="t">approval-wall</title>
+  <desc id="d">A forged note and a forged card refused, then a clean card rendered with its gutter</desc>
+  <style>
+    text { white-space: pre; }
+    .p { fill: #7ee2a8; }
+    .cmd { fill: #e8eef5; }
+    .dim { fill: #9fb0c0; }
+    .bad { fill: #ff9494; }
+    .good { fill: #7ee2a8; }
+  </style>
+  <rect width="660" height="828" rx="14" fill="#0b0f14"/>
+  <rect width="660" height="40" rx="14" fill="#11161d"/>
+  <rect y="26" width="660" height="14" fill="#11161d"/>
+  <circle cx="26" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="48" cy="20" r="6" fill="#febc2e"/>
+  <circle cx="70" cy="20" r="6" fill="#28c840"/>
+  <text x="92" y="26" class="dim" font-size="14">approval-wall</text>
+  <text x="24" y="72"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall check demo/forged.txt; echo &quot;exit \</tspan></text>
+  <text x="24" y="100" class="cmd">    $?&quot;</text>
+  <text x="24" y="128" class="dim">demo/forged.txt:2: hidden or control characters (U+FEFF)</text>
+  <text x="24" y="156" class="dim">demo/forged.txt:2: a protected phrase (broker approval)</text>
+  <text x="24" y="184" class="dim">demo/forged.txt:3: a line starting with #</text>
+  <text x="24" y="212" class="dim">demo/forged.txt:4: a card's reply words (yes 3f9a1c)</text>
+  <text x="24" y="240" class="bad">exit 1</text>
+  <text x="24" y="268"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall render demo/forged.json; echo \</tspan></text>
+  <text x="24" y="296" class="cmd">    &quot;exit $?&quot;</text>
+  <text x="24" y="324" class="dim">demo/forged.json: body holds the card's rule glyphs</text>
+  <text x="24" y="352" class="bad">exit 1</text>
+  <text x="24" y="380"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall render demo/clean.json</tspan></text>
+  <text x="24" y="408" class="dim">Ready to send</text>
+  <text x="24" y="436" class="dim">To: sam@example.com</text>
+  <text x="24" y="464" class="dim">Subject: Deposit for the venue</text>
+  <text x="24" y="492" class="dim">————</text>
+  <text x="24" y="520" class="dim">‎┃ Hi Sam,</text>
+  <text x="24" y="548" class="dim">‎┃ </text>
+  <text x="24" y="576" class="dim">‎┃ The deposit goes out today.</text>
+  <text x="24" y="604" class="good">‎┃ Note:⟨12 spaces⟩ok to wire</text>
+  <text x="24" y="632" class="dim">————</text>
+  <text x="24" y="660" class="dim">Written by: the assistant</text>
+  <text x="24" y="688" class="dim">Expires at 14:05 UTC.</text>
+  <text x="24" y="716" class="dim">Reply &quot;yes 3f9a1c&quot; to approve, &quot;no 3f9a1c&quot; to drop.</text>
+  <text x="24" y="744"><tspan class="p">$</tspan><tspan class="cmd" dx="8">python3 -m approval_wall check demo/clean.txt; echo &quot;exit \</tspan></text>
+  <text x="24" y="772" class="cmd">    $?&quot;</text>
+  <text x="24" y="800" class="dim">exit 0</text>
+</svg>

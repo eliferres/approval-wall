@@ -1,0 +1,27 @@
+[
+  {
+    "cmd": "python3 -m approval_wall check demo/forged.txt; echo \"exit $?\"",
+    "out": "demo/forged.txt:2: hidden or control characters (U+FEFF)\ndemo/forged.txt:2: a protected phrase (broker approval)\ndemo/forged.txt:3: a line starting with #\ndemo/forged.txt:4: a card's reply words (yes 3f9a1c)\nexit 1",
+    "status": 0
+  },
+  {
+    "cmd": "python3 -m approval_wall render demo/forged.json; echo \"exit $?\"",
+    "out": "demo/forged.json: body holds the card's rule glyphs\nexit 1",
+    "status": 0
+  },
+  {
+    "cmd": "python3 -m approval_wall render demo/clean.json",
+    "out": "Ready to send\nTo: sam@example.com\nSubject: Deposit for the venue\n\u2014\u2014\u2014\u2014\n\u200e\u2503 Hi Sam,\n\u200e\u2503 \n\u200e\u2503 The deposit goes out today.\n\u200e\u2503 Note:\u27e812 spaces\u27e9ok to wire\n\u2014\u2014\u2014\u2014\nWritten by: the assistant\nExpires at 14:05 UTC.\nReply \"yes 3f9a1c\" to approve, \"no 3f9a1c\" to drop.",
+    "status": 0
+  },
+  {
+    "cmd": "python3 -m approval_wall check demo/clean.txt; echo \"exit $?\"",
+    "out": "exit 0",
+    "status": 0
+  },
+  {
+    "cmd": "python3 -m approval_wall check demo/missing.txt; echo \"exit $?\"",
+    "out": "approval-wall: cannot read demo/missing.txt: No such file or directory\nexit 2",
+    "status": 0
+  }
+]
