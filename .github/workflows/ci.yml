@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Check the demo inputs
+        run: |
+          python -m approval_wall check demo/clean.txt
+          python -m approval_wall render demo/clean.json
+          python -m approval_wall check demo/forged.txt && code=0 || code=$?
+          [ "$code" = 1 ] || { echo "demo/forged.txt exited $code, expected 1"; exit 1; }
+          python -m approval_wall render demo/forged.json && code=0 || code=$?
+          [ "$code" = 1 ] || { echo "demo/forged.json exited $code, expected 1"; exit 1; }
+      - name: Install and run the console script
+        run: |
+          python -m pip install .
+          approval-wall --version
+          approval-wall render demo/clean.json
