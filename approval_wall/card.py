@@ -117,7 +117,9 @@ class Card:
     """One approval card. `id` is the caller's (6 to 32 lowercase hex
     characters) and `expires` its text, as in "in 60 minutes (14:05 UTC)".
     `width` is the most characters a shown body line holds, the gutter's two
-    included: a phone narrower than that wraps the card's lines itself."""
+    included: a phone narrower than that wraps the card's lines itself. Every
+    footer line must fit the width too, so at the default of 36 the id is at
+    most 12 characters."""
     id: str
     expires: str
     body: str
@@ -144,6 +146,13 @@ class Card:
             why = one_line_refusal(key, getattr(self, key))
             if why:
                 return why
+        # A footer line that wrapped would leave a row with no gutter under the
+        # closing rule, the very shape a forged footer takes, so it is refused.
+        # The head may wrap: a one-line field cannot hold the rule's glyphs.
+        for line in self.foot()[1:]:
+            if len(line) > self.width:
+                return "the footer line %r is %d characters, wider than the card's width of %d" % (
+                    line, len(line), self.width)
         why = hidden_refusal(self.body)
         if why:
             return "body holds " + why

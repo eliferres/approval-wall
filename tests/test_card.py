@@ -91,6 +91,31 @@ class TestFields(unittest.TestCase):
         with self.assertRaises(a.Refused):
             card(subject="a\nb").render()
 
+    def test_an_author_line_wider_than_the_width_is_refused(self) -> None:
+        c = card(author="the assistant, on behalf of the whole team")
+        self.assertEqual(c.refusal(), "the footer line 'Written by: the assistant, on behalf of the whole team' "
+                                      "is 54 characters, wider than the card's width of 36")
+        self.assertFalse(c.is_whole())
+        with self.assertRaises(a.Refused):
+            c.render()
+        self.assertIsNone(card(author="the assistant, on behalf of the whole team", width=60).refusal())
+
+    def test_an_expiry_line_wider_than_the_width_is_refused(self) -> None:
+        c = card(expires="in 60 minutes, at 14:05 UTC on Monday 12 October")
+        self.assertIn("is 57 characters, wider than the card's width of 36", c.refusal())
+        self.assertFalse(c.is_whole())
+
+    def test_a_long_id_needs_a_wider_card(self) -> None:
+        self.assertIn("wider than the card's width", card(id="3f9a1c0b2d4e6f").refusal())
+        self.assertIsNone(card(id="3f9a1c0b2d4e").refusal())
+
+    def test_a_long_subject_still_renders_with_the_frame_whole(self) -> None:
+        c = card(subject="Deposit for the venue, the caterer and the band, due Friday")
+        self.assertTrue(c.is_whole())
+        lines = c.render()[0].split("\n")
+        self.assertEqual(lines[1], "Subject: Deposit for the venue, the caterer and the band, due Friday")
+        self.assertTrue(all(len(line) <= 36 for line in lines[lines.index(a.RULE, 2):]))
+
     def test_a_tab_in_the_body_is_refused(self) -> None:
         self.assertEqual(card(body="a\tb").refusal(), "body holds hidden or control characters (U+0009)")
 
@@ -117,14 +142,15 @@ class TestCut(unittest.TestCase):
         self.assertEqual(lines, [a.GUTTER + "alpha beta gamma delta epsilon", a.GUTTER + "zeta eta theta"])
 
     def test_a_run_with_no_space_is_cut_hard_at_the_width(self) -> None:
-        lines = body_lines(card(body="x" * 80, width=30).render())
+        lines = body_lines(card(body="x" * 80, width=30, expires="soon").render())
         self.assertEqual([len(line) - len(a.GUTTER) for line in lines], [28, 28, 24])
 
     def test_the_width_must_be_a_whole_number_of_at_least_20(self) -> None:
         for bad in (19, 0, True, 36.0, "36"):
             with self.subTest(width=bad):
-                self.assertEqual(card(width=bad).refusal(), "width must be a whole number of at least 20")
-        self.assertIsNone(card(width=20).refusal())
+                self.assertEqual(card(width=bad, expires="soon").refusal(), "width must be a whole number of at least 20")
+        self.assertNotIn("width must be", card(width=20, expires="soon").refusal())
+        self.assertIsNone(card(width=30, expires="soon").refusal())
 
     def test_no_body_text_is_lost_in_the_cut(self) -> None:
         body = "".join(chr(0x41 + i % 26) for i in range(5000))
