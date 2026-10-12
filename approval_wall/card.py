@@ -7,6 +7,9 @@ form, an inbound message), so none of it may pass as the card's own lines:
 - every body line, blank ones included, starts with a gutter mark, so no body
   line can sit flush with the frame or push a fake footer out of view;
 - the rule line's glyphs are refused inside the body and every field;
+- every body line is wrapped to the card's width before the gutter goes on,
+  so a long line never wraps on the phone into a continuation with no
+  gutter, where it could draw a rule or a footer flush with the frame;
 - a run of three or more spaces is shown as a mark naming its length, since a
   long run wraps on a phone and puts the words after it on a line of their own;
 - the one-line fields refuse anything that could end their line or change
@@ -38,6 +41,8 @@ BLANKS = "".join(map(chr, (0x00A0, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x200
 SPACE_RUN = re.compile("[\\s%s]{3,}" % BLANKS)
 SPACE_MARK = chr(0x27E8) + "%d spaces" + chr(0x27E9)
 INDENT_KEPT = 8
+WIDTH = 36                                   # characters per shown line, the gutter's two included
+MIN_WIDTH = 20
 ID = re.compile(r"[0-9a-f]{6,32}")
 # An RFC 2047 encoded word: a mail client shows the decoded text, the card would show this.
 ENCODED_WORD = re.compile(r"=\?[^?\s]+\?[bBqQ]\?[^?\s]*\?=")
@@ -100,7 +105,9 @@ def one_line_refusal(key: str, value: str) -> Optional[str]:
 @dataclass(frozen=True)
 class Card:
     """One approval card. `id` is the caller's (6 to 32 lowercase hex
-    characters) and `expires` its text, as in "in 60 minutes (14:05 UTC)"."""
+    characters) and `expires` its text, as in "in 60 minutes (14:05 UTC)".
+    `width` is the most characters a shown body line holds, the gutter's two
+    included: a phone narrower than that wraps the card's lines itself."""
     id: str
     expires: str
     body: str
@@ -110,13 +117,16 @@ class Card:
     recipient: str = ""
     subject: str = ""
     author: str = ""
+    width: int = WIDTH
 
     def refusal(self) -> Optional[str]:
         """Why this card cannot be shown, or None."""
         if not ID.fullmatch(self.id):
             return "id must be 6 to 32 lowercase hex characters"
+        if isinstance(self.width, bool) or not isinstance(self.width, int) or self.width < MIN_WIDTH:
+            return "width must be a whole number of at least %d" % MIN_WIDTH
         for f in fields(self):
-            if not isinstance(getattr(self, f.name), str):
+            if f.name != "width" and not isinstance(getattr(self, f.name), str):
                 return "%s must be text" % f.name
         if not self.title or not self.expires:
             return "title and expires must not be empty"
@@ -173,7 +183,7 @@ class Card:
             raise Refused("the card's head or footer does not fit in %d UTF-16 units" % limit)
         pieces: List[str] = []
         current, size = list(self.head()), units("\n".join(self.head()))
-        for line in _gutter_lines(self.body, limit):
+        for line in _gutter_lines(self.body, self.width, limit):
             need = units(line) + 1
             if size + need > limit:
                 pieces.append("\n".join(current))
@@ -191,17 +201,29 @@ class Card:
         return pieces
 
 
-def _gutter_lines(body: str, limit: int) -> Iterator[str]:
-    """Every body line with its gutter, each cut so a gutter line fits in
-    `limit` UTF-16 units. A cut never splits a surrogate pair: a character
-    that would cross the limit starts the next line."""
+def _gutter_lines(body: str, width: int, limit: int) -> Iterator[str]:
+    """Every body line wrapped to `width` shown characters, each piece with
+    its gutter. A line breaks at its last space that fits, or is cut hard
+    when no space does. Each piece also fits in `limit` UTF-16 units, and a
+    cut never splits a surrogate pair."""
+    cols = width - 2                # the bar and its space; the left-to-right mark takes no column
     room = limit - units(GUTTER)
     for line in body.split("\n"):
-        shown, start, size = spaces_shown(line), 0, 0
-        for i, c in enumerate(shown):
-            width = 2 if ord(c) > 0xFFFF else 1
-            if size + width > room:
-                yield GUTTER + shown[start:i]
-                start, size = i, 0
-            size += width
-        yield GUTTER + shown[start:]
+        shown, start = spaces_shown(line), 0
+        while True:
+            end, size = start, 0
+            while end < len(shown) and end - start < cols:
+                size += 2 if ord(shown[end]) > 0xFFFF else 1
+                if size > room:
+                    break
+                end += 1
+            if end >= len(shown):
+                yield GUTTER + shown[start:]
+                break
+            space = shown.rfind(" ", start + 1, end + 1)
+            if space > start:       # break at the space and drop it
+                yield GUTTER + shown[start:space]
+                start = space + 1
+            else:
+                yield GUTTER + shown[start:end]
+                start = end

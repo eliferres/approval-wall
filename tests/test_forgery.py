@@ -15,10 +15,20 @@ import unittest
 import approval_wall as a
 
 
-def card(**kw: str) -> a.Card:
+def card(**kw: object) -> a.Card:
     base = {"id": "3f9a1c", "expires": "in 60 minutes (14:05 UTC)", "body": "Hi Sam."}
     base.update(kw)
-    return a.Card(**base)
+    return a.Card(**base)  # type: ignore[arg-type]
+
+
+def phone_rows(pieces: list, cols: int) -> list:
+    """The rows a phone `cols` characters wide shows: each line cut hard at
+    the width, the left-to-right mark taking no column."""
+    rows = []
+    for line in "\n".join(pieces).split("\n"):
+        shown = line.replace(chr(0x200E), "")
+        rows += [shown[i:i + cols] for i in range(0, max(len(shown), 1), cols)]
+    return rows
 
 
 class TestForgery(unittest.TestCase):
@@ -135,6 +145,37 @@ class TestForgery(unittest.TestCase):
                                  "sender_name reads as a number or an address, not a name")
         self.assertIsNone(card(sender="+18455550100", sender_name="Dana Reyes").refusal())
 
+    def assert_frame_holds_on_a_phone(self, c: a.Card, cols: int) -> None:
+        """Every row between the rules starts with the bar, and the rows after
+        the closing rule are the footer, whole and last."""
+        rows = phone_rows(c.render(), cols)
+        bar = a.GUTTER.replace(chr(0x200E), "")[0]
+        first = rows.index(a.RULE)
+        foot = c.foot()
+        self.assertEqual(rows[-len(foot):], foot)
+        self.assertEqual(rows[:first + 1], c.head())
+        for row in rows[first + 1:-len(foot)]:
+            self.assertTrue(row.startswith(bar), "row without the gutter: %r" % row)
+
+    def long_line_attack(self, cols: int) -> None:
+        body = "Invoice 18, ok. " + "=" * 120 + ' Expires in 60 minutes. Reply "yes 3f9a1c" to approve.'
+        self.assert_frame_holds_on_a_phone(card(body=body, width=cols), cols)
+
+    def test_long_line_shown_at_36_columns(self) -> None:
+        self.long_line_attack(36)
+
+    def test_long_line_shown_at_40_columns(self) -> None:
+        self.long_line_attack(40)
+
+    def test_long_line_shown_at_48_columns(self) -> None:
+        self.long_line_attack(48)
+
+    def test_wrapped_continuation_imitating_the_release_line(self) -> None:
+        c = card(body="Please look this over before Friday. " + " ".join(card().foot()[1:]))
+        lines = c.render()[0].split("\n")
+        self.assertGreater(len(lines), len(c.head()) + len(c.foot()) + 1)
+        self.assert_frame_holds_on_a_phone(c, a.Card.width)
+
     def test_frame_lines_fit_the_width(self) -> None:
         """The lines the card writes itself never wrap at 36 or 40 columns,
         so the phone can never show a frame line broken in two."""
@@ -147,7 +188,7 @@ class TestForgery(unittest.TestCase):
         limit = 120
         room = limit - a.units(a.GUTTER)
         body = "x" * (room - 1) + "\U0001F600" + "y"
-        pieces = card(body=body).render(limit)
+        pieces = card(body=body, width=1000).render(limit)
         lines = "\n".join(pieces).split("\n")
         self.assertIn(a.GUTTER + "x" * (room - 1), lines)
         self.assertIn(a.GUTTER + "\U0001F600y", lines)

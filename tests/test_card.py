@@ -6,10 +6,10 @@ import unittest
 import approval_wall as a
 
 
-def card(**kw: str) -> a.Card:
+def card(**kw: object) -> a.Card:
     base = {"id": "3f9a1c", "expires": "in 60 minutes (14:05 UTC)", "body": "Hi Sam,\n\nSee you Monday."}
     base.update(kw)
-    return a.Card(**base)
+    return a.Card(**base)  # type: ignore[arg-type]
 
 
 def body_lines(pieces: list) -> list:
@@ -111,6 +111,20 @@ class TestCut(unittest.TestCase):
         self.assertIn("\n" + a.RULE + "\n", "\n" + pieces[-1])
         for piece in pieces[1:]:
             self.assertTrue(piece.startswith(a.GUTTER) or piece.startswith(a.RULE))
+
+    def test_a_long_line_wraps_at_a_space_within_the_width(self) -> None:
+        lines = body_lines(card(body="alpha beta gamma delta epsilon zeta eta theta").render())
+        self.assertEqual(lines, [a.GUTTER + "alpha beta gamma delta epsilon", a.GUTTER + "zeta eta theta"])
+
+    def test_a_run_with_no_space_is_cut_hard_at_the_width(self) -> None:
+        lines = body_lines(card(body="x" * 80, width=30).render())
+        self.assertEqual([len(line) - len(a.GUTTER) for line in lines], [28, 28, 24])
+
+    def test_the_width_must_be_a_whole_number_of_at_least_20(self) -> None:
+        for bad in (19, 0, True, 36.0, "36"):
+            with self.subTest(width=bad):
+                self.assertEqual(card(width=bad).refusal(), "width must be a whole number of at least 20")
+        self.assertIsNone(card(width=20).refusal())
 
     def test_no_body_text_is_lost_in_the_cut(self) -> None:
         body = "".join(chr(0x41 + i % 26) for i in range(5000))

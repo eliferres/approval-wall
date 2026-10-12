@@ -67,6 +67,12 @@ def check(path: str, as_json: bool) -> int:
     return 1 if found else 0
 
 
+def _right_type(key: str, value: object) -> bool:
+    if key == "width":
+        return isinstance(value, int) and not isinstance(value, bool)
+    return isinstance(value, str)
+
+
 def load_card(path: str) -> Card:
     try:
         data = json.loads(_read(path))
@@ -80,9 +86,10 @@ def load_card(path: str) -> Card:
     missing = [k for k in REQUIRED if k not in data]
     if missing:
         raise UsageError("%s is missing: %s" % (path, ", ".join(missing)))
-    wrong = [k for k, v in data.items() if not isinstance(v, str)]
+    wrong = [k for k, v in data.items() if not _right_type(k, v)]
     if wrong:
-        raise UsageError("%s: these fields must be strings: %s" % (path, ", ".join(sorted(wrong))))
+        raise UsageError("%s: wrong type for %s (width is a whole number, the rest are strings)"
+                         % (path, ", ".join(sorted(wrong))))
     return Card(**data)
 
 
