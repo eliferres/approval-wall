@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "approval-wall"
+dynamic = ["version"]
+description = "Keep an approval card a person reads on a phone from being forged by the text inside it"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Eli Ferres" }]
+
+[project.urls]
+Source = "https://github.com/eliferres/approval-wall"
+Changelog = "https://github.com/eliferres/approval-wall/blob/main/CHANGELOG.md"
+
+[project.scripts]
+approval-wall = "approval_wall:main"
+
+[tool.setuptools]
+packages = ["approval_wall"]
+
+[tool.setuptools.dynamic]
+version = { attr = "approval_wall.__version__" }
