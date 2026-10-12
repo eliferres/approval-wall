@@ -15,6 +15,10 @@ byte for byte, in ASCII, and every line that is not part of an exact entry
 is labelled as the model's. The key is drawn after the text is fixed, so no
 text can hold its own entry's end line and close the entry early. A begin
 line with no end line after it leaves the rest of the file as the model's.
+
+The grammar trusts its writer: model text must reach the file only through
+Entry.text. A program that writes the file directly can forge a complete
+entry with its own key, and no reader can tell.
 """
 from __future__ import annotations
 

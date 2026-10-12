@@ -8,6 +8,10 @@ Report it privately through GitHub's private vulnerability reporting: the "Repor
 
 You will get a reply within two business days. A confirmed bypass earns a named test in `tests/test_forgery.py` and a release that refuses it, and the report is credited in the changelog unless you ask otherwise.
 
+## The trust assumption
+
+Model text must reach the notes file only through `Entry.text`. Anything that writes the file directly can forge a complete entry with its own key, and the grammar cannot tell it from a real one. A forged entry written that way is outside what this package can catch.
+
 ## In scope
 
 - `hidden`, `hidden_in`, `refusal`, `skeleton` and `reads_as` missing a character or a shape they claim to catch.

@@ -121,6 +121,7 @@ The names `hidden`, `hidden_in`, `skeleton`, `marked`, `note_refusal`, `hidden_r
 - **Only Telegram was checked for the gutter mark.** Another client may strip the left-to-right mark; the bar still frames each line, but a right-to-left line could then move it.
 - **The fields are shown as given.** A subject, a recipient or an author longer than the width wraps on the phone. Those fields pass the one-line checks first, but their continuation rows carry no gutter.
 - **This is not an approval system.** It renders and refuses text. Ids, expiry, delivery, the record of who said yes and acting on it are the caller's. If a piece of a card fails to send, the caller must treat the whole card as undelivered.
+- **The entry grammar trusts the writer.** Model text must reach the notes file only through `Entry.text`. Anything that writes the file directly can forge a complete entry with its own key, and the grammar cannot tell it from a real one.
 - **This is not a sandbox.** It decides what a person sees, not what a model may do.
 - **The default notice phrases are one bot's.** Pass your own wording to `reads_as` and `refusal`.
 
