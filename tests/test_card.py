@@ -145,11 +145,10 @@ class TestCut(unittest.TestCase):
         lines = body_lines(card(body="x" * 80, width=30, expires="soon").render())
         self.assertEqual([len(line) - len(a.GUTTER) for line in lines], [28, 28, 24])
 
-    def test_the_width_must_be_a_whole_number_of_at_least_20(self) -> None:
-        for bad in (19, 0, True, 36.0, "36"):
+    def test_the_width_must_be_a_whole_number_of_at_least_30(self) -> None:
+        for bad in (29, 20, 0, True, 36.0, "36"):
             with self.subTest(width=bad):
-                self.assertEqual(card(width=bad, expires="soon").refusal(), "width must be a whole number of at least 20")
-        self.assertNotIn("width must be", card(width=20, expires="soon").refusal())
+                self.assertEqual(card(width=bad, expires="soon").refusal(), "width must be a whole number of at least 30")
         self.assertIsNone(card(width=30, expires="soon").refusal())
 
     def test_no_body_text_is_lost_in_the_cut(self) -> None:

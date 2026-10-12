@@ -43,7 +43,7 @@ SPACE_RUN = re.compile("[\\s%s]{3,}" % BLANKS)
 SPACE_MARK = chr(0x27E8) + "%d spaces" + chr(0x27E9)
 INDENT_KEPT = 8
 WIDTH = 36                                   # characters per shown line, the gutter's two included
-MIN_WIDTH = 20
+MIN_WIDTH = 30                               # the release line with a six-character id
 ID = re.compile(r"[0-9a-f]{6,32}")
 # An RFC 2047 encoded word: a mail client shows the decoded text, the card would show this.
 ENCODED_WORD = re.compile(r"=\?[^?\s]+\?[bBqQ]\?[^?\s]*\?=")
