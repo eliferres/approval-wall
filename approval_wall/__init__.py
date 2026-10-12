@@ -21,8 +21,10 @@ __version__ = "0.1.0"
 
 from .text import (CONFUSABLES, NOTICE_WORDS, REPLY_WORDS, has_marker, hidden, hidden_in,  # noqa: E402
                    hidden_refusal, marked, names, note_refusal, reads_as, refusal, skeleton, starts_header)
+from .card import GUTTER, LIMIT, RULE, Card, Refused, one_line_refusal, spaces_shown, units  # noqa: E402
 
 __all__ = [
-    "CONFUSABLES", "NOTICE_WORDS", "REPLY_WORDS", "has_marker", "hidden", "hidden_in", "hidden_refusal",
-    "marked", "names", "note_refusal", "reads_as", "refusal", "skeleton", "starts_header",
+    "CONFUSABLES", "Card", "GUTTER", "LIMIT", "NOTICE_WORDS", "REPLY_WORDS", "RULE", "Refused", "has_marker",
+    "hidden", "hidden_in", "hidden_refusal", "marked", "names", "note_refusal", "one_line_refusal",
+    "reads_as", "refusal", "skeleton", "spaces_shown", "starts_header", "units",
 ]
