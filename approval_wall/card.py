@@ -41,8 +41,10 @@ BLANKS = "".join(map(chr, (0x00A0, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x200
                            0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000, 0xFEFF)))
 SPACE_RUN = re.compile("[\\s%s]{3,}" % BLANKS)
 SPACE_MARK = chr(0x27E8) + "%d spaces" + chr(0x27E9)
+MARK = re.compile("%s[0-9]+ spaces%s|." % (chr(0x27E8), chr(0x27E9)), re.S)
+BREAKS = (" ", chr(0x3000))                  # a space and the ideographic space
 INDENT_KEPT = 8
-WIDTH = 36                                   # characters per shown line, the gutter's two included
+WIDTH = 36                                   # columns per shown line, the gutter's two included
 MIN_WIDTH = 30                               # the release line with a six-character id
 ID = re.compile(r"[0-9a-f]{6,32}")
 # An RFC 2047 encoded word: a mail client shows the decoded text, the card would show this.
@@ -116,8 +118,8 @@ def one_line_refusal(key: str, value: str) -> Optional[str]:
 class Card:
     """One approval card. `id` is the caller's (6 to 32 lowercase hex
     characters) and `expires` its text, as in "in 60 minutes (14:05 UTC)".
-    `width` is the most characters a shown body line holds, the gutter's two
-    included: a phone narrower than that wraps the card's lines itself. Every
+    `width` is the most columns a shown body line takes, the gutter's two
+    included, a wide or fullwidth character counting two: a phone narrower than that wraps the card's lines itself. Every
     footer line must fit the width too, so at the default of 36 the id is at
     most 12 characters."""
     id: str
@@ -150,9 +152,9 @@ class Card:
         # closing rule, the very shape a forged footer takes, so it is refused.
         # The head may wrap: a one-line field cannot hold the rule's glyphs.
         for line in self.foot()[1:]:
-            if len(line) > self.width:
-                return "the footer line %r is %d characters, wider than the card's width of %d" % (
-                    line, len(line), self.width)
+            if columns(line) > self.width:
+                return "the footer line %r is %d columns, wider than the card's width of %d" % (
+                    line, columns(line), self.width)
         why = hidden_refusal(self.body)
         if why:
             return "body holds " + why
@@ -222,29 +224,49 @@ class Card:
         return pieces
 
 
+def columns(text: str) -> int:
+    """How many terminal columns the text takes: two for a wide or fullwidth
+    character (East Asian width W or F), none for a combining mark or a
+    format character, one for anything else."""
+    total = 0
+    for c in text:
+        if unicodedata.combining(c) or unicodedata.category(c) in ("Mn", "Me", "Cf"):
+            continue
+        total += 2 if unicodedata.east_asian_width(c) in ("W", "F") else 1
+    return total
+
+
+def _tokens(shown: str) -> List[str]:
+    """The line as unbreakable pieces: each space mark whole, every other
+    character alone."""
+    return MARK.findall(shown)
+
+
 def _gutter_lines(body: str, width: int, limit: int) -> Iterator[str]:
-    """Every body line wrapped to `width` shown characters, each piece with
-    its gutter. A line breaks at its last space that fits, or is cut hard
-    when no space does. Each piece also fits in `limit` UTF-16 units, and a
-    cut never splits a surrogate pair."""
-    cols = width - 2                # the bar and its space; the left-to-right mark takes no column
+    """Every body line wrapped to `width` columns, gutter included, each piece
+    with its gutter. A line breaks at its last space or ideographic space
+    that fits, or is cut hard when none does, never inside a space mark.
+    Each piece also fits in `limit` UTF-16 units, so a cut never splits a
+    surrogate pair."""
+    cols = width - columns(GUTTER)
     room = limit - units(GUTTER)
     for line in body.split("\n"):
-        shown, start = spaces_shown(line), 0
+        tokens, start = _tokens(spaces_shown(line)), 0
         while True:
-            end, size = start, 0
-            while end < len(shown) and end - start < cols:
-                size += 2 if ord(shown[end]) > 0xFFFF else 1
-                if size > room:
+            end, wide, size = start, 0, 0
+            while end < len(tokens):
+                wide += columns(tokens[end])
+                size += units(tokens[end])
+                if (wide > cols or size > room) and end > start:
                     break
                 end += 1
-            if end >= len(shown):
-                yield GUTTER + shown[start:]
+            if end >= len(tokens):
+                yield GUTTER + "".join(tokens[start:])
                 break
-            space = shown.rfind(" ", start + 1, end + 1)
-            if space > start:       # break at the space and drop it
-                yield GUTTER + shown[start:space]
+            space = next((k for k in range(end, start, -1) if tokens[k] in BREAKS), None)
+            if space is not None:   # break at the space and drop it
+                yield GUTTER + "".join(tokens[start:space])
                 start = space + 1
             else:
-                yield GUTTER + shown[start:end]
+                yield GUTTER + "".join(tokens[start:end])
                 start = end

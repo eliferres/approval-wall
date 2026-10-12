@@ -10,6 +10,7 @@ a card body, and spelled out by marked().
 from __future__ import annotations
 
 import time
+import unicodedata
 import unittest
 
 import approval_wall as a
@@ -22,12 +23,19 @@ def card(**kw: object) -> a.Card:
 
 
 def phone_rows(pieces: list, cols: int) -> list:
-    """The rows a phone `cols` characters wide shows: each line cut hard at
-    the width, the left-to-right mark taking no column."""
+    """The rows a phone `cols` columns wide shows: each line cut hard at the
+    width, a wide or fullwidth character taking two columns and the
+    left-to-right mark none."""
     rows = []
     for line in "\n".join(pieces).split("\n"):
-        shown = line.replace(chr(0x200E), "")
-        rows += [shown[i:i + cols] for i in range(0, max(len(shown), 1), cols)]
+        row, used = "", 0
+        for c in line.replace(chr(0x200E), ""):
+            w = 2 if unicodedata.east_asian_width(c) in ("W", "F") else 1
+            if used + w > cols:
+                rows.append(row)
+                row, used = "", 0
+            row, used = row + c, used + w
+        rows.append(row)
     return rows
 
 
@@ -169,6 +177,31 @@ class TestForgery(unittest.TestCase):
 
     def test_long_line_shown_at_48_columns(self) -> None:
         self.long_line_attack(48)
+
+    def test_wide_characters_shown_at_36_columns(self) -> None:
+        for body in ("\u30fc" * 34, "\uff25\uff58\uff50\uff49\uff52\uff45\uff53\u3000\uff49\uff4e\u3000"
+                                    "\uff16\uff10\u3000\uff4d\uff49\uff4e\uff0e"):
+            with self.subTest(body=body):
+                self.assert_frame_holds_on_a_phone(card(body=body), 36)
+
+    def test_wide_characters_shown_at_40_columns(self) -> None:
+        for body in ("\u30fc" * 34, "\uff25\uff58\uff50\uff49\uff52\uff45\uff53\u3000\uff49\uff4e\u3000"
+                                    "\uff16\uff10\u3000\uff4d\uff49\uff4e\uff0e"):
+            with self.subTest(body=body):
+                self.assert_frame_holds_on_a_phone(card(body=body, width=40), 40)
+
+    def test_footer_line_of_wide_characters_refused(self) -> None:
+        author = "\uff21" * 13
+        self.assertEqual(len("Written by: " + author), 25)
+        self.assertEqual(card(author=author).refusal(), "the footer line 'Written by: %s' is 38 columns, "
+                                                        "wider than the card's width of 36" % author)
+
+    def test_space_mark_never_split(self) -> None:
+        for n in range(20, 40):
+            with self.subTest(n=n):
+                lines = card(body="x" * n + "   " + "y").render()[0].split("\n")
+                for line in lines:
+                    self.assertEqual(line.count("\u27e8"), line.count("\u27e9"), line)
 
     def test_line_drawing_run_refused(self) -> None:
         body = "Invoice 18, ok. " + chr(0x2501) * 120 + ' Expires in 60 minutes. Reply "yes 3f9a1c" to approve.'

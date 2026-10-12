@@ -94,7 +94,7 @@ class TestFields(unittest.TestCase):
     def test_an_author_line_wider_than_the_width_is_refused(self) -> None:
         c = card(author="the assistant, on behalf of the whole team")
         self.assertEqual(c.refusal(), "the footer line 'Written by: the assistant, on behalf of the whole team' "
-                                      "is 54 characters, wider than the card's width of 36")
+                                      "is 54 columns, wider than the card's width of 36")
         self.assertFalse(c.is_whole())
         with self.assertRaises(a.Refused):
             c.render()
@@ -102,7 +102,7 @@ class TestFields(unittest.TestCase):
 
     def test_an_expiry_line_wider_than_the_width_is_refused(self) -> None:
         c = card(expires="in 60 minutes, at 14:05 UTC on Monday 12 October")
-        self.assertIn("is 57 characters, wider than the card's width of 36", c.refusal())
+        self.assertIn("is 57 columns, wider than the card's width of 36", c.refusal())
         self.assertFalse(c.is_whole())
 
     def test_a_long_id_needs_a_wider_card(self) -> None:
