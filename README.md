@@ -9,6 +9,8 @@ approval-wall keeps an approval card, the "approve this?" message a bot sends to
 
 <img src="demo/terminal.svg" width="660" alt="Terminal session: approval-wall refuses a note holding a byte-order mark, a fullwidth header and a card's reply words with exit 1, refuses a card whose body draws the rule line with exit 1, renders a clean card with a bar in front of every body line and a run of twelve spaces shown as a mark, and passes a clean note with exit 0.">
 
+The [fde-agent-skills](https://github.com/eliferres/fde-agent-skills) library documents the working methods behind this tool and its sibling tools as agent skills.
+
 ## Install and first run
 
 ```bash
